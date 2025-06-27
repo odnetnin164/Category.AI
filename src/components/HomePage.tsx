@@ -53,6 +53,12 @@ const HomePage: React.FC = () => {
       <header className="home-header">
         <h1>🎯 Category.AI</h1>
         <p>Choose a deck to start playing</p>
+        <button 
+          className="create-deck-button"
+          onClick={() => navigate('/create')}
+        >
+          ✨ Create New Deck
+        </button>
       </header>
       
       <div className="deck-grid">

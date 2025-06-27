@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { MongoClient, Db, ObjectId } from 'mongodb';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { generateDeck, GenerateDeckRequest } from './services/openai';
 
 dotenv.config();
 
@@ -57,6 +58,37 @@ app.get('/api/decks/:id', async (req: Request, res: Response): Promise<void> => 
   } catch (error) {
     console.error('Error fetching deck:', error);
     res.status(500).json({ error: 'Failed to fetch deck' });
+  }
+});
+
+app.post('/api/decks/generate', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { prompt, categoryName, cardCount, model }: GenerateDeckRequest = req.body;
+    
+    if (!prompt) {
+      res.status(400).json({ error: 'Prompt is required' });
+      return;
+    }
+
+    const result = await generateDeck({ prompt, categoryName, cardCount, model });
+    
+    if (!result.success) {
+      res.status(500).json({ error: result.error || 'Failed to generate deck' });
+      return;
+    }
+
+    // Save the generated deck to MongoDB
+    const deckToSave: any = {
+      _id: `generated-${Date.now()}`,
+      ...result.deck
+    };
+
+    await db.collection('decks').insertOne(deckToSave);
+    
+    res.json(deckToSave);
+  } catch (error) {
+    console.error('Error generating deck:', error);
+    res.status(500).json({ error: 'Failed to generate deck' });
   }
 });
 

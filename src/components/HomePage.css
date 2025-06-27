@@ -21,8 +21,29 @@
 
 .home-header p {
   font-size: clamp(1rem, 3vw, 1.2rem);
-  margin: 10px 0 0 0;
+  margin: 10px 0 20px 0;
   opacity: 0.9;
+}
+
+.create-deck-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  margin-top: 10px;
+}
+
+.create-deck-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
 .deck-grid {

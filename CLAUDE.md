@@ -4,8 +4,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
+**IMPORTANT**: All development must be done through Docker Compose due to required services (MongoDB, OpenAI API integration).
+
 ```bash
-# Start development server
+# Start all services (MongoDB + Backend + Frontend)
+docker-compose up --build
+
+# Run in detached mode
+docker-compose up -d
+
+# Stop all containers
+docker-compose down
+
+# Rebuild images
+docker-compose build --no-cache
+
+# View logs
+docker-compose logs -f
+
+# Access individual service logs
+docker-compose logs -f backend
+docker-compose logs -f frontend
+```
+
+**Docker Setup**: 
+- **Frontend**: React app served via nginx at `http://localhost:3000`
+- **Backend**: Express/TypeScript API server at `http://localhost:3001`  
+- **Database**: MongoDB at `http://localhost:27017`
+- **OpenAI Integration**: Requires `OPENAI_API_KEY` and `OPENAI_URL` in `.env`
+
+### Local Development (Legacy - Not Recommended)
+Only use these commands for testing individual components:
+
+```bash
+# Start development server (requires MongoDB and OpenAI setup)
 npm start
 
 # Build for production
@@ -20,24 +52,6 @@ npm test -- --watchAll
 # Run specific test file
 npm test ComponentName.test.tsx
 ```
-
-## Docker Commands
-
-```bash
-# Build and run the application in Docker
-docker-compose up --build
-
-# Run in detached mode
-docker-compose up -d
-
-# Stop the container
-docker-compose down
-
-# Rebuild the image
-docker-compose build --no-cache
-```
-
-**Docker Setup**: The application runs in a multi-stage Docker container using Node 22 for building and nginx for serving. The app will be available at `http://localhost:3000` when running via Docker.
 
 ## Security & Package Management
 
