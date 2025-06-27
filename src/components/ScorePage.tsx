@@ -47,7 +47,7 @@ const ScorePage: React.FC = () => {
     <div className="score-page">
       <div className="score-container">
         <div className="score-header">
-          <div className="deck-info">
+          <div className="score-deck-info">
             <div className="deck-emoji">{deck.emoji}</div>
             <h1>{deck.name}</h1>
           </div>
