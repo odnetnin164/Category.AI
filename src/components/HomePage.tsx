@@ -1,15 +1,52 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { decks } from '../data/decks';
+import { apiService } from '../services/api';
 import { Deck } from '../types';
 import './HomePage.css';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const [decks, setDecks] = useState<Deck[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDecks = async () => {
+      try {
+        setLoading(true);
+        const fetchedDecks = await apiService.getDecks();
+        setDecks(fetchedDecks);
+      } catch (err) {
+        setError('Failed to load decks. Please try again.');
+        console.error('Error fetching decks:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDecks();
+  }, []);
 
   const handleDeckSelect = (deck: Deck) => {
     navigate(`/deck/${deck.id}`);
   };
+
+  if (loading) {
+    return (
+      <div className="home-page">
+        <div className="loading">Loading decks...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="home-page">
+        <div className="error">{error}</div>
+        <button onClick={() => window.location.reload()}>Retry</button>
+      </div>
+    );
+  }
 
   return (
     <div className="home-page">

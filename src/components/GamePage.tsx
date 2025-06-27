@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { decks } from '../data/decks';
-import { Card, GameResult } from '../types';
+import { apiService } from '../services/api';
+import { Card, GameResult, Deck } from '../types';
 import './GamePage.css';
 
 const GamePage: React.FC = () => {
   const navigate = useNavigate();
   const { deckId } = useParams<{ deckId: string }>();
   
-  const [deck] = useState(() => decks.find(d => d.id === deckId));
+  const [deck, setDeck] = useState<Deck | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [shuffledCards, setShuffledCards] = useState<Card[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [gameResults, setGameResults] = useState<GameResult[]>([]);
@@ -19,14 +21,32 @@ const GamePage: React.FC = () => {
   const [isActionCooldown, setIsActionCooldown] = useState(false);
 
   useEffect(() => {
-    if (!deck) {
-      navigate('/');
-      return;
-    }
+    const fetchDeck = async () => {
+      if (!deckId) {
+        navigate('/');
+        return;
+      }
 
-    const shuffled = [...deck.cards].sort(() => Math.random() - 0.5);
-    setShuffledCards(shuffled);
-  }, [deck, navigate]);
+      try {
+        setLoading(true);
+        const fetchedDeck = await apiService.getDeck(deckId);
+        if (!fetchedDeck) {
+          navigate('/');
+          return;
+        }
+        setDeck(fetchedDeck);
+        const shuffled = [...fetchedDeck.cards].sort(() => Math.random() - 0.5);
+        setShuffledCards(shuffled);
+      } catch (err) {
+        setError('Failed to load deck');
+        console.error('Error fetching deck:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDeck();
+  }, [deckId, navigate]);
 
   useEffect(() => {
     if (gameState === 'countdown') {
@@ -122,8 +142,21 @@ const GamePage: React.FC = () => {
     };
   }, [gameState, handleCardAction]);
 
-  if (!deck) {
-    return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="game-page">
+        <div className="loading">Loading game...</div>
+      </div>
+    );
+  }
+
+  if (error || !deck) {
+    return (
+      <div className="game-page">
+        <div className="error">{error || 'Deck not found'}</div>
+        <button onClick={() => navigate('/')}>Go Home</button>
+      </div>
+    );
   }
 
   if (gameState === 'countdown') {

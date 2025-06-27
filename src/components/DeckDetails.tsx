@@ -1,18 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { decks } from '../data/decks';
+import { apiService } from '../services/api';
+import { Deck } from '../types';
 import './DeckDetails.css';
 
 const DeckDetails: React.FC = () => {
   const navigate = useNavigate();
   const { deckId } = useParams<{ deckId: string }>();
-  
-  const deck = decks.find(d => d.id === deckId);
+  const [deck, setDeck] = useState<Deck | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!deck) {
+  useEffect(() => {
+    const fetchDeck = async () => {
+      if (!deckId) {
+        navigate('/');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const fetchedDeck = await apiService.getDeck(deckId);
+        if (!fetchedDeck) {
+          setError('Deck not found');
+        } else {
+          setDeck(fetchedDeck);
+        }
+      } catch (err) {
+        setError('Failed to load deck. Please try again.');
+        console.error('Error fetching deck:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDeck();
+  }, [deckId, navigate]);
+
+  if (loading) {
     return (
       <div className="deck-details">
-        <h1>Deck not found</h1>
+        <div className="loading">Loading deck...</div>
+      </div>
+    );
+  }
+
+  if (error || !deck) {
+    return (
+      <div className="deck-details">
+        <h1>{error || 'Deck not found'}</h1>
         <button onClick={() => navigate('/')}>Go Home</button>
       </div>
     );
