@@ -21,6 +21,24 @@ npm test -- --watchAll
 npm test ComponentName.test.tsx
 ```
 
+## Docker Commands
+
+```bash
+# Build and run the application in Docker
+docker-compose up --build
+
+# Run in detached mode
+docker-compose up -d
+
+# Stop the container
+docker-compose down
+
+# Rebuild the image
+docker-compose build --no-cache
+```
+
+**Docker Setup**: The application runs in a multi-stage Docker container using Node 22 for building and nginx for serving. The app will be available at `http://localhost:3000` when running via Docker.
+
 ## Security & Package Management
 
 ```bash
