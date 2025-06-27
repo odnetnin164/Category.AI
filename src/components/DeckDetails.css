@@ -1,0 +1,143 @@
+.deck-details {
+  padding: clamp(10px, 3vw, 20px);
+  max-width: 600px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.deck-details-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: clamp(20px, 5vw, 40px);
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.deck-header {
+  margin-bottom: 30px;
+}
+
+.deck-emoji-large {
+  font-size: clamp(3rem, 12vw, 5rem);
+  margin-bottom: 20px;
+}
+
+.deck-title {
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  margin: 0 0 15px 0;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  word-wrap: break-word;
+}
+
+.deck-desc {
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  margin: 0;
+  opacity: 0.9;
+}
+
+.deck-stats {
+  display: flex;
+  justify-content: center;
+  gap: clamp(20px, 8vw, 40px);
+  margin: 30px 0;
+  flex-wrap: wrap;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-number {
+  font-size: clamp(2rem, 6vw, 2.5rem);
+  font-weight: bold;
+  color: #FFD700;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.stat-label {
+  font-size: clamp(0.8rem, 2.5vw, 1rem);
+  opacity: 0.8;
+  margin-top: 5px;
+}
+
+.game-instructions {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: clamp(15px, 4vw, 25px);
+  margin: 30px 0;
+  text-align: left;
+}
+
+.game-instructions h3 {
+  margin: 0 0 15px 0;
+  font-size: clamp(1.1rem, 3vw, 1.3rem);
+  text-align: center;
+}
+
+.game-instructions ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.game-instructions li {
+  margin: 8px 0;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  line-height: 1.4;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+}
+
+.start-button {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: clamp(12px, 3vw, 15px) clamp(20px, 5vw, 30px);
+  font-size: clamp(1.1rem, 3vw, 1.3rem);
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  width: 100%;
+  max-width: 300px;
+}
+
+.start-button:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.back-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: clamp(10px, 2.5vw, 12px) clamp(20px, 4vw, 25px);
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 300px;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
