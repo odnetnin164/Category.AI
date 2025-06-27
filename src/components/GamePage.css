@@ -1,13 +1,15 @@
 .game-page {
   background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
   min-height: 100vh;
+  max-height: 100vh;
   color: white;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: clamp(10px, 2vh, 20px);
   user-select: none;
   border: 4px solid #333;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .countdown-screen {
@@ -17,15 +19,15 @@
 }
 
 .countdown-content h1 {
-  font-size: clamp(2rem, 8vw, 3rem);
-  margin-bottom: 40px;
+  font-size: clamp(1.5rem, 6vh, 2.5rem);
+  margin-bottom: clamp(15px, 3vh, 30px);
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .countdown-number {
-  font-size: clamp(4rem, 20vw, 8rem);
+  font-size: clamp(3rem, 15vh, 6rem);
   font-weight: bold;
-  margin: 20px 0;
+  margin: clamp(10px, 2vh, 20px) 0;
   text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
   animation: pulse 1s ease-in-out;
 }
@@ -37,17 +39,19 @@
 }
 
 .countdown-content p {
-  font-size: clamp(1rem, 3vw, 1.2rem);
+  font-size: clamp(0.9rem, 2.5vh, 1.1rem);
   opacity: 0.9;
   max-width: 90vw;
   margin: 0 auto;
+  line-height: 1.3;
 }
 
 .tilt-instructions {
   display: flex;
   justify-content: space-around;
-  margin-top: 40px;
-  padding: 20px;
+  margin-top: clamp(15px, 3vh, 30px);
+  padding: clamp(10px, 2vh, 20px);
+  gap: clamp(10px, 2vw, 20px);
 }
 
 .tilt-instruction {
@@ -56,13 +60,14 @@
 }
 
 .tilt-arrow {
-  font-size: clamp(1.5rem, 6vw, 2rem);
-  margin-bottom: 10px;
+  font-size: clamp(1.2rem, 4vh, 1.8rem);
+  margin-bottom: clamp(5px, 1vh, 10px);
 }
 
 .tilt-instruction div:last-child {
-  font-size: clamp(0.8rem, 3vw, 1rem);
+  font-size: clamp(0.7rem, 2vh, 0.9rem);
   font-weight: bold;
+  line-height: 1.2;
 }
 
 .game-header {
@@ -94,20 +99,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 40px 0;
-  padding-bottom: 120px;
+  margin: clamp(10px, 2vh, 20px) 0;
+  padding-bottom: clamp(60px, 8vh, 100px);
+  min-height: 0;
 }
 
 .current-card {
   background: transparent;
   color: white;
-  padding: 20px;
+  padding: clamp(10px, 2vh, 20px);
   font-size: clamp(2rem, 12vw, 20vh);
   font-weight: bold;
   text-align: center;
   max-width: 95vw;
   width: 100%;
-  height: 50vh;
+  max-height: 40vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -121,8 +127,8 @@
   font-size: clamp(2rem, 12vw, 20vh);
   font-weight: bold;
   text-align: center;
-  padding: 20px;
-  height: 50vh;
+  padding: clamp(10px, 2vh, 20px);
+  max-height: 40vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -175,13 +181,13 @@
   display: flex;
   gap: clamp(10px, 3vw, 20px);
   justify-content: center;
-  margin-top: 20px;
+  margin-top: clamp(10px, 2vh, 20px);
   position: fixed;
-  bottom: clamp(10px, 3vw, 20px);
+  bottom: clamp(5px, 1vh, 15px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
-  padding: 0 10px;
+  padding: 0 clamp(5px, 1vw, 10px);
   box-sizing: border-box;
   width: 100%;
   max-width: 500px;
