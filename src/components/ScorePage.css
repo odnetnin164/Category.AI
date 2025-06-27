@@ -166,12 +166,27 @@
   width: 30px;
 }
 
-.result-text {
+.result-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.result-text {
   font-size: clamp(0.9rem, 2.5vw, 1.1rem);
   font-weight: 500;
   word-wrap: break-word;
-  min-width: 0;
+}
+
+.result-info {
+  font-size: clamp(0.7rem, 2vw, 0.9rem);
+  opacity: 0.8;
+  font-style: italic;
+  line-height: 1.3;
+  word-wrap: break-word;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .result-status {

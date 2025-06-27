@@ -3,13 +3,13 @@ FROM node:22-alpine as development
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better Docker layer caching
 COPY package*.json ./
 
 # Install all dependencies (including dev dependencies)
 RUN npm ci
 
-# Copy source code
+# Copy source code after dependencies are installed
 COPY . .
 
 # Expose port 3000

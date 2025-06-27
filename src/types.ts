@@ -1,6 +1,7 @@
 export interface Card {
   id: string;
   text: string;
+  info?: string;
 }
 
 export interface Deck {

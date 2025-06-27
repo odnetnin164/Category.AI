@@ -84,7 +84,12 @@ const ScorePage: React.FC = () => {
                 <div className="result-icon">
                   {result.result === 'correct' ? '✅' : '❌'}
                 </div>
-                <div className="result-text">{result.card.text}</div>
+                <div className="result-content">
+                  <div className="result-text">{result.card.text}</div>
+                  {result.card.info && (
+                    <div className="result-info">{result.card.info}</div>
+                  )}
+                </div>
                 <div className="result-status">
                   {result.result === 'correct' ? 'Correct' : 'Passed'}
                 </div>
