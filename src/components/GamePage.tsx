@@ -112,10 +112,23 @@ const GamePage: React.FC = () => {
     }, 800);
   }, [gameState, currentCardIndex, shuffledCards, isActionCooldown]);
 
+  const handleSkipToEnd = useCallback(() => {
+    if (gameState !== 'playing') return;
+    
+    setGameState('finished');
+    navigate(`/score/${deckId}`, { 
+      state: { 
+        results: gameResults, 
+        deck: deck,
+        totalTime: 60 - timeLeft 
+      } 
+    });
+  }, [gameState, gameResults, deck, deckId, timeLeft, navigate]);
+
   useEffect(() => {
     if (gameState !== 'playing') return;
 
-    const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+    const handleDeviceOrientation = (event: any) => {
       const beta = event.beta || 0;
       
       if (beta > 45) {
@@ -133,7 +146,28 @@ const GamePage: React.FC = () => {
       }
     };
 
-    window.addEventListener('deviceorientation', handleDeviceOrientation);
+    const requestOrientationPermission = async () => {
+      if (!('DeviceOrientationEvent' in window)) {
+        console.log('DeviceOrientationEvent not supported');
+        return;
+      }
+
+      if (typeof (window as any).DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const permission = await (window as any).DeviceOrientationEvent.requestPermission();
+          if (permission === 'granted') {
+            window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+          }
+        } catch (error) {
+          console.log('DeviceOrientation permission denied');
+          window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+        }
+      } else {
+        window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+      }
+    };
+
+    requestOrientationPermission();
     window.addEventListener('keydown', handleKeyPress);
 
     return () => {
@@ -199,6 +233,7 @@ const GamePage: React.FC = () => {
       <div className="game-header">
         <div className="timer">{timeLeft}s</div>
         <div className="score">{gameResults.filter(r => r.result === 'correct').length}/{gameResults.length}</div>
+        <button className="skip-button" onClick={handleSkipToEnd}>End Game</button>
       </div>
 
       <div className="card-display">

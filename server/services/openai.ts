@@ -28,7 +28,6 @@ export async function generateDeck(request: GenerateDeckRequest): Promise<Genera
 Here is an example:
 \`\`\`
 {
-    _id: "oscar2024",
     emoji: "🏆",
     name: "2024 Oscar Winners",
     description: "Academy Award winners from the 96th ceremony!",

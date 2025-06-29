@@ -78,9 +78,10 @@ app.post('/api/decks/generate', async (req: Request, res: Response): Promise<voi
     }
 
     // Save the generated deck to MongoDB
+    const { _id, ...deckWithoutId } = result.deck as any;
     const deckToSave: any = {
       _id: `generated-${Date.now()}`,
-      ...result.deck
+      ...deckWithoutId
     };
 
     await db.collection('decks').insertOne(deckToSave);
