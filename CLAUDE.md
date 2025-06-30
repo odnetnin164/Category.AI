@@ -57,6 +57,35 @@ npm test ComponentName.test.tsx
 
 ## Security & Package Management
 
+### Secret Management & Security Guidelines
+
+**CRITICAL**: Never commit secrets, API keys, passwords, or sensitive configuration to the repository.
+
+**Secret Masking Instructions for Claude Code**:
+- Always mask/redact API keys, tokens, passwords, and sensitive values when displaying code or logs
+- Use `[REDACTED]`, `***`, or `[API_KEY_HIDDEN]` placeholders instead of actual secret values
+- When showing environment variables, mask the values: `OPENAI_API_KEY=[REDACTED]`
+- Never include actual secret values in git commits, pull requests, or documentation
+- If secrets are accidentally exposed, treat as security incident and rotate immediately
+
+**Environment Variables & Secrets**:
+```bash
+# Required environment variables (add actual values to .env file)
+OPENAI_API_KEY=[REDACTED]
+OPENAI_URL=[REDACTED]
+MONGODB_URI=[REDACTED]
+JWT_SECRET=[REDACTED]
+```
+
+**Security Checklist**:
+- ✅ All secrets are in `.env` files (never committed)
+- ✅ Comprehensive `.gitignore` patterns for secrets
+- ✅ Environment-based configuration for all sensitive data
+- ✅ No hardcoded credentials in source code
+- ✅ SSL/TLS enabled for production communications
+
+### Package Security
+
 ```bash
 # Audit packages for security vulnerabilities (run after adding new packages)
 npm audit

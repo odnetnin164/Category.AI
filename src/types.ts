@@ -10,6 +10,10 @@ export interface Deck {
   description: string;
   emoji: string;
   cards: Card[];
+  status?: 'generating' | 'ready' | 'error';
+  generatedAt?: string;
+  requestedAt?: string;
+  originalPrompt?: string;
 }
 
 export interface GameResult {

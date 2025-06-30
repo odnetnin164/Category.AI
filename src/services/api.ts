@@ -32,6 +32,59 @@ export const apiService = {
     }
   },
 
+  async getUpdatedDecks(deckIds: string[]): Promise<Deck[]> {
+    try {
+      if (deckIds.length === 0) {
+        return [];
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/api/decks`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch decks');
+      }
+      const decks = await response.json();
+      
+      // Filter only the specific deck IDs we want to update
+      return decks
+        .filter((deck: any) => deckIds.includes(deck._id))
+        .map((deck: any) => ({
+          ...deck,
+          id: deck._id,
+          cards: deck.cards.map((card: any) => ({
+            ...card,
+            id: card.id.toString()
+          }))
+        }));
+    } catch (error) {
+      console.error('Error fetching updated decks:', error);
+      return []; // Return empty array on error to not break the UI
+    }
+  },
+
+  async getGeneratingDecks(): Promise<Deck[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/decks`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch decks');
+      }
+      const decks = await response.json();
+      // Filter only generating and error decks and convert format
+      return decks
+        .filter((deck: any) => deck.status === 'generating' || deck.status === 'error')
+        .map((deck: any) => ({
+          ...deck,
+          id: deck._id,
+          cards: deck.cards.map((card: any) => ({
+            ...card,
+            id: card.id.toString()
+          }))
+        }));
+    } catch (error) {
+      console.error('Error fetching generating decks:', error);
+      return []; // Return empty array on error to not break the UI
+    }
+  },
+
   async getDeck(id: string): Promise<Deck | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/api/decks/${id}`);
@@ -57,17 +110,14 @@ export const apiService = {
     }
   },
 
-  async startDeckGeneration(request: GenerateDeckRequest, socketId: string): Promise<{ status: string; message: string }> {
+  async startDeckGeneration(request: GenerateDeckRequest): Promise<{ deck: any; status: string; message: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/api/decks/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...request,
-          socketId
-        }),
+        body: JSON.stringify(request),
       });
 
       if (!response.ok) {
@@ -78,6 +128,27 @@ export const apiService = {
       return await response.json();
     } catch (error) {
       console.error('Error starting deck generation:', error);
+      throw error;
+    }
+  },
+
+  async retryDeck(deckId: string): Promise<{ status: string; message: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/decks/${deckId}/retry`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to retry deck generation');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error retrying deck:', error);
       throw error;
     }
   },

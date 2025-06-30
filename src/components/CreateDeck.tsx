@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
-import { socketService, DeckGenerationProgress, DeckGenerationComplete, DeckGenerationError } from '../services/socketService';
 import './CreateDeck.css';
 
 const CreateDeck: React.FC = () => {
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [generationProgress, setGenerationProgress] = useState<DeckGenerationProgress | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [formData, setFormData] = useState({
     prompt: '',
@@ -17,60 +15,6 @@ const CreateDeck: React.FC = () => {
     model: ''
   });
 
-  useEffect(() => {
-    // Connect to WebSocket when component mounts
-    const connectSocket = async () => {
-      try {
-        await socketService.connect();
-        console.log('WebSocket connected successfully');
-      } catch (error) {
-        console.error('Failed to connect to WebSocket:', error);
-        setErrorMessage('Failed to connect to server. Please refresh and try again.');
-      }
-    };
-
-    connectSocket();
-
-    // Setup event listeners
-    const handleProgress = (data: DeckGenerationProgress) => {
-      setGenerationProgress(data);
-    };
-
-    const handleComplete = (data: DeckGenerationComplete) => {
-      setGenerationProgress({ stage: 'saving', message: data.message, progress: 100 });
-      
-      // Convert deck for compatibility
-      const deck = {
-        ...data.deck,
-        id: data.deck._id,
-        cards: data.deck.cards.map((card: any) => ({
-          ...card,
-          id: card.id.toString()
-        }))
-      };
-      
-      // Navigate to the newly created deck after a brief delay
-      setTimeout(() => {
-        navigate(`/deck/${deck.id}`);
-      }, 1000);
-    };
-
-    const handleError = (data: DeckGenerationError) => {
-      setIsGenerating(false);
-      setGenerationProgress(null);
-      setErrorMessage(data.error);
-    };
-
-    socketService.onDeckGenerationProgress(handleProgress);
-    socketService.onDeckGenerationComplete(handleComplete);
-    socketService.onDeckGenerationError(handleError);
-
-    // Cleanup on component unmount
-    return () => {
-      socketService.removeAllListeners();
-      socketService.disconnect();
-    };
-  }, [navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -88,30 +32,20 @@ const CreateDeck: React.FC = () => {
       return;
     }
 
-    if (!socketService.isSocketConnected()) {
-      setErrorMessage('Not connected to server. Please refresh and try again.');
-      return;
-    }
-
-    const socketId = socketService.getSocketId();
-    if (!socketId) {
-      setErrorMessage('WebSocket connection not ready. Please try again.');
-      return;
-    }
-
     setIsGenerating(true);
     setErrorMessage('');
-    setGenerationProgress(null);
     
     try {
-      await apiService.startDeckGeneration({
+      const response = await apiService.startDeckGeneration({
         prompt: formData.prompt,
         categoryName: formData.categoryName || undefined,
         cardCount: formData.cardCount,
         model: formData.model || undefined
-      }, socketId);
+      });
       
-      // The rest is handled by WebSocket events
+      // Redirect to home page immediately after placeholder creation
+      navigate('/', { state: { fromCreate: true } });
+      
     } catch (error) {
       console.error('Error starting deck generation:', error);
       setErrorMessage('Failed to start deck generation. Please try again.');
@@ -253,26 +187,8 @@ const CreateDeck: React.FC = () => {
 
       {isGenerating && (
         <div className="generation-status">
-          {generationProgress ? (
-            <>
-              <div className="progress-container">
-                <div className="progress-bar">
-                  <div 
-                    className="progress-fill" 
-                    style={{ width: `${generationProgress.progress}%` }}
-                  ></div>
-                </div>
-                <span className="progress-text">{generationProgress.progress}%</span>
-              </div>
-              <p>🤖 {generationProgress.message}</p>
-              <p className="stage-info">Stage: {generationProgress.stage}</p>
-            </>
-          ) : (
-            <>
-              <p>🤖 Connecting to AI service...</p>
-              <p>This may take a moment</p>
-            </>
-          )}
+          <p>🤖 Creating placeholder deck...</p>
+          <p>You'll be redirected to the home page shortly</p>
         </div>
       )}
     </div>

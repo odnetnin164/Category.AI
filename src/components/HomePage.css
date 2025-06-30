@@ -100,3 +100,111 @@
   width: fit-content;
   margin: 0 auto;
 }
+
+/* Deck status styles */
+.deck-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.deck-disabled:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.deck-status {
+  font-weight: bold;
+}
+
+.status-generating .deck-status {
+  color: #ffd700;
+  animation: pulse 2s infinite;
+}
+
+.status-error .deck-status {
+  color: #ff6b6b;
+}
+
+.generating-spinner {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.2rem;
+  animation: spin 2s linear infinite;
+}
+
+.deck-card {
+  position: relative;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Retry button styles */
+.retry-button {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.retry-button:hover:not(:disabled) {
+  background: #ff5252;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.retry-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.retry-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.retry-button.retrying {
+  background: #ffa726;
+  animation: pulse 1.5s infinite;
+}
+
+.retry-button.retrying:hover {
+  background: #ffa726;
+  transform: none;
+}
+
+/* Ensure error cards have relative positioning for absolute button */
+.status-error {
+  position: relative;
+}
+
+/* Adjust error card cursor when retry button is present */
+.status-error.deck-card {
+  cursor: default;
+}
+
+.status-error.deck-card:hover {
+  cursor: default;
+}

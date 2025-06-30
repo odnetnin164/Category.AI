@@ -19,9 +19,14 @@ export interface GenerateDeckResponse {
   error?: string;
 }
 
-export async function generateDeck(request: GenerateDeckRequest): Promise<GenerateDeckResponse> {
+export async function generateDeck(request: GenerateDeckRequest, retryCount: number = 0): Promise<GenerateDeckResponse> {
+  const maxRetries = 5; // Maximum number of retries
+  const baseDelay = 2000; // Base delay of 2 seconds
+  
   try {
     const { prompt, categoryName, cardCount = 50, model = process.env.OPENAI_MODEL || 'gpt-3.5-turbo' } = request;
+    
+    console.log(`Generating deck (attempt ${retryCount + 1}/${maxRetries + 1}): ${prompt}`);
     
     const systemPrompt = `Create a list of things in the category below. Use a json format. Only the name of the items (text) in the list should be returned with a short explanation (info) as a subproperty. There should preferrably around ${cardCount} items, but be sure to ONLY include items that fit the category, even if it results in a short list. Do not add adjectives to the items in the list. If something is related to size or measurements, use absolute values rather than relative. Use common names rather than full names (e.g., "Bill Clinton" rather than "William J. Clinton"). No yapping.
 
@@ -62,7 +67,9 @@ Here is an example:
         { role: 'user', content: userPrompt }
       ],
       temperature: 0.8,
-      max_tokens: 2000
+      max_tokens: 8000 // Increased from 2000 to allow larger deck generations
+    }, {
+      timeout: 120000 // 2 minute timeout for API calls
     });
 
     const content = response.choices[0]?.message?.content;
@@ -128,11 +135,24 @@ Here is an example:
     };
 
   } catch (error) {
-    console.error('Error generating deck:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error(`Error generating deck (attempt ${retryCount + 1}):`, errorMessage);
+    
+    // If we haven't exceeded max retries, try again with exponential backoff
+    if (retryCount < maxRetries) {
+      const delay = baseDelay * Math.pow(2, retryCount); // Exponential backoff
+      console.log(`Retrying deck generation in ${delay}ms...`);
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return generateDeck(request, retryCount + 1);
+    }
+    
+    // If all retries exhausted, return error
+    console.error(`All ${maxRetries + 1} attempts failed for deck generation: ${request.prompt}`);
     return {
       deck: {} as Omit<Deck, 'id'>,
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
+      error: `Failed after ${maxRetries + 1} attempts: ${errorMessage}`
     };
   }
 }
