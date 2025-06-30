@@ -209,6 +209,35 @@ app.post('/api/decks/:id/retry', async (req: Request, res: Response): Promise<vo
   }
 });
 
+app.delete('/api/decks/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const deckId = req.params.id;
+    
+    // Try to find by string ID first, then by ObjectId if it's a valid ObjectId format
+    let query: any = { _id: deckId };
+    if (ObjectId.isValid(deckId)) {
+      query = { $or: [{ _id: deckId }, { _id: new ObjectId(deckId) }] };
+    }
+    
+    const result = await db.collection('decks').deleteOne(query);
+    
+    if (result.deletedCount === 0) {
+      res.status(404).json({ error: 'Deck not found' });
+      return;
+    }
+    
+    console.log(`Deck deleted: ${deckId}`);
+    res.json({ 
+      status: 'success',
+      message: 'Deck deleted successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error deleting deck:', error);
+    res.status(500).json({ error: 'Failed to delete deck' });
+  }
+});
+
 // Async function to generate deck in background and update placeholder
 async function generateDeckInBackground(
   request: GenerateDeckRequest, 
@@ -295,19 +324,29 @@ async function startErrorDeckRetryService(): Promise<void> {
       // Find all decks with error status
       const errorDecks = await db.collection('decks').find({ status: 'error' }).toArray();
       
-      if (errorDecks.length > 0) {
-        console.log(`Found ${errorDecks.length} error deck(s) to retry`);
+      // Find generating decks that are older than 10 minutes (likely stuck)
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+      const stuckGeneratingDecks = await db.collection('decks').find({ 
+        status: 'generating',
+        requestedAt: { $lt: tenMinutesAgo.toISOString() }
+      }).toArray();
+      
+      const allDecksToRetry = [...errorDecks, ...stuckGeneratingDecks];
+      
+      if (allDecksToRetry.length > 0) {
+        console.log(`Found ${errorDecks.length} error deck(s) and ${stuckGeneratingDecks.length} stuck generating deck(s) to retry`);
         
-        for (const errorDeck of errorDecks) {
-          console.log(`Retrying error deck: ${errorDeck._id} - "${errorDeck.originalPrompt}"`);
+        for (const deck of allDecksToRetry) {
+          const isStuck = deck.status === 'generating';
+          console.log(`Retrying ${isStuck ? 'stuck generating' : 'error'} deck: ${deck._id} - "${deck.originalPrompt}"`);
           
           // Reset deck status to generating
           await db.collection('decks').updateOne(
-            { _id: errorDeck._id } as any,
+            { _id: deck._id } as any,
             {
               $set: {
                 status: 'generating',
-                description: `AI is retrying deck generation: "${errorDeck.originalPrompt}"`,
+                description: `AI is ${isStuck ? 'restarting' : 'retrying'} deck generation: "${deck.originalPrompt}"`,
                 emoji: '⏳'
               }
             }
@@ -315,15 +354,15 @@ async function startErrorDeckRetryService(): Promise<void> {
           
           // Start background generation for this deck
           const request: GenerateDeckRequest = {
-            prompt: errorDeck.originalPrompt,
-            categoryName: errorDeck.name !== 'Generating...' ? errorDeck.name : undefined,
+            prompt: deck.originalPrompt,
+            categoryName: deck.name !== 'Generating...' ? deck.name : undefined,
             cardCount: 50, // Default card count
             model: undefined
           };
           
           // Start retry in background (don't await to allow parallel processing)
-          generateDeckInBackground(request, errorDeck._id.toString(), db).catch(err => {
-            console.error(`Failed to restart generation for deck ${errorDeck._id.toString()}:`, err);
+          generateDeckInBackground(request, deck._id.toString(), db).catch(err => {
+            console.error(`Failed to restart generation for deck ${deck._id.toString()}:`, err);
           });
         }
       }

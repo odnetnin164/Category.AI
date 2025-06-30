@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { Deck } from '../types';
@@ -11,6 +11,9 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryingDecks, setRetryingDecks] = useState<Set<string>>(new Set());
+  const [showOptionsMenu, setShowOptionsMenu] = useState<string | null>(null);
+  const [deletingDecks, setDeletingDecks] = useState<Set<string>>(new Set());
+  const optionsMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchDecks = async () => {
@@ -82,6 +85,23 @@ const HomePage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Handle click outside to close options menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (optionsMenuRef.current && !optionsMenuRef.current.contains(event.target as Node)) {
+        setShowOptionsMenu(null);
+      }
+    };
+
+    if (showOptionsMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showOptionsMenu]);
+
   // Handle navigation from create page - trigger immediate update to show new placeholder
   useEffect(() => {
     if (location.state?.fromCreate) {
@@ -115,14 +135,13 @@ const HomePage: React.FC = () => {
     navigate(`/deck/${deck.id}`);
   };
 
-  const handleRetryDeck = async (deck: Deck, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent deck selection
-    
+  const handleRetryDeck = async (deck: Deck) => {
     if (retryingDecks.has(deck.id)) {
       return; // Already retrying
     }
     
     setRetryingDecks(prev => new Set(prev).add(deck.id));
+    setShowOptionsMenu(null); // Close options menu
     
     try {
       await apiService.retryDeck(deck.id);
@@ -141,6 +160,32 @@ const HomePage: React.FC = () => {
       setError(`Failed to retry deck: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setRetryingDecks(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(deck.id);
+        return newSet;
+      });
+    }
+  };
+
+  const handleDeleteDeck = async (deck: Deck) => {
+    if (deletingDecks.has(deck.id)) {
+      return; // Already deleting
+    }
+    
+    setDeletingDecks(prev => new Set(prev).add(deck.id));
+    setShowOptionsMenu(null); // Close options menu
+    
+    try {
+      await apiService.deleteDeck(deck.id);
+      console.log(`Deck deleted: ${deck.id}`);
+      
+      // Remove the deck from the list immediately
+      setDecks(prevDecks => prevDecks.filter(d => d.id !== deck.id));
+    } catch (error) {
+      console.error('Failed to delete deck:', error);
+      setError(`Failed to delete deck: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setDeletingDecks(prev => {
         const newSet = new Set(prev);
         newSet.delete(deck.id);
         return newSet;
@@ -195,6 +240,8 @@ const HomePage: React.FC = () => {
           const status = getDeckStatus(deck);
           const isDisabled = deck.status === 'generating' || deck.status === 'error';
           const isRetrying = retryingDecks.has(deck.id);
+          const isDeleting = deletingDecks.has(deck.id);
+          const showGear = deck.status === 'error' || deck.status === 'ready';
           
           return (
             <div 
@@ -202,6 +249,46 @@ const HomePage: React.FC = () => {
               className={`deck-card ${isDisabled ? 'deck-disabled' : ''} ${status?.class || ''}`}
               onClick={() => handleDeckSelect(deck)}
             >
+              {showGear && (
+                <div className="options-menu" ref={optionsMenuRef}>
+                  <button 
+                    className="options-gear" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowOptionsMenu(showOptionsMenu === deck.id ? null : deck.id);
+                    }}
+                    aria-label="Options"
+                  >
+                    ⚙️
+                  </button>
+                  {showOptionsMenu === deck.id && (
+                    <div className="options-dropdown">
+                      {deck.status === 'error' && (
+                        <button 
+                          className="retry-option" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRetryDeck(deck);
+                          }}
+                          disabled={isRetrying}
+                        >
+                          🔄 {isRetrying ? 'Retrying...' : 'Retry'}
+                        </button>
+                      )}
+                      <button 
+                        className="delete-option" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteDeck(deck);
+                        }}
+                        disabled={isDeleting}
+                      >
+                        🗑️ {isDeleting ? 'Deleting...' : 'Delete Deck'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="deck-emoji">{deck.emoji}</div>
               <h3 className="deck-name">{deck.name}</h3>
               <p className="deck-description">{deck.description}</p>
@@ -214,16 +301,6 @@ const HomePage: React.FC = () => {
               </div>
               {deck.status === 'generating' && (
                 <div className="generating-spinner">⏳</div>
-              )}
-              {deck.status === 'error' && (
-                <button 
-                  className={`retry-button ${isRetrying ? 'retrying' : ''}`}
-                  onClick={(e) => handleRetryDeck(deck, e)}
-                  disabled={isRetrying}
-                  title="Retry deck generation"
-                >
-                  {isRetrying ? '⟳' : '🔄'} {isRetrying ? 'Retrying...' : 'Retry'}
-                </button>
               )}
             </div>
           );

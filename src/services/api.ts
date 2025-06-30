@@ -153,6 +153,27 @@ export const apiService = {
     }
   },
 
+  async deleteDeck(id: string): Promise<{ status: string; message: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/decks/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Deck not found');
+        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to delete deck');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error deleting deck:', error);
+      throw error;
+    }
+  },
+
   // Keep the old method for backward compatibility, but deprecated
   async generateDeck(request: GenerateDeckRequest): Promise<Deck> {
     console.warn('generateDeck is deprecated. Use startDeckGeneration with WebSocket events instead.');

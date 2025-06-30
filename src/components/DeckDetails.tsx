@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { Deck } from '../types';
@@ -10,6 +10,10 @@ const DeckDetails: React.FC = () => {
   const [deck, setDeck] = useState<Deck | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const optionsMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchDeck = async () => {
@@ -37,6 +41,22 @@ const DeckDetails: React.FC = () => {
     fetchDeck();
   }, [deckId, navigate]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (optionsMenuRef.current && !optionsMenuRef.current.contains(event.target as Node)) {
+        setShowOptionsMenu(false);
+      }
+    };
+
+    if (showOptionsMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showOptionsMenu]);
+
   if (loading) {
     return (
       <div className="deck-details">
@@ -62,9 +82,48 @@ const DeckDetails: React.FC = () => {
     navigate('/');
   };
 
+  const handleDeleteDeck = async () => {
+    if (!deck || !deckId) return;
+    
+    try {
+      setDeleting(true);
+      await apiService.deleteDeck(deckId);
+      navigate('/');
+    } catch (err) {
+      setError('Failed to delete deck. Please try again.');
+      console.error('Error deleting deck:', err);
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   return (
     <div className="deck-details">
       <div className="deck-details-card">
+        <div className="options-menu" ref={optionsMenuRef}>
+          <button 
+            className="options-gear" 
+            onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+            aria-label="Options"
+          >
+            ⚙️
+          </button>
+          {showOptionsMenu && (
+            <div className="options-dropdown">
+              <button 
+                className="delete-option" 
+                onClick={() => {
+                  setShowDeleteConfirm(true);
+                  setShowOptionsMenu(false);
+                }}
+                disabled={deleting}
+              >
+                🗑️ Delete Deck
+              </button>
+            </div>
+          )}
+        </div>
         <div className="deck-header">
           <div className="deck-emoji-large">{deck.emoji}</div>
           <h1 className="deck-title">{deck.name}</h1>
@@ -101,6 +160,31 @@ const DeckDetails: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <div className="delete-confirmation">
+          <div className="delete-modal">
+            <h3>Delete Deck?</h3>
+            <p>Are you sure you want to delete "{deck.name}"? This action cannot be undone.</p>
+            <div className="delete-actions">
+              <button 
+                className="confirm-delete" 
+                onClick={handleDeleteDeck}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+              <button 
+                className="cancel-delete" 
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
