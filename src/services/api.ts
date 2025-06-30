@@ -1,6 +1,6 @@
 import { Deck } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://localhost';
 
 export interface GenerateDeckRequest {
   prompt: string;
@@ -57,7 +57,34 @@ export const apiService = {
     }
   },
 
+  async startDeckGeneration(request: GenerateDeckRequest, socketId: string): Promise<{ status: string; message: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/decks/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...request,
+          socketId
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to start deck generation');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error starting deck generation:', error);
+      throw error;
+    }
+  },
+
+  // Keep the old method for backward compatibility, but deprecated
   async generateDeck(request: GenerateDeckRequest): Promise<Deck> {
+    console.warn('generateDeck is deprecated. Use startDeckGeneration with WebSocket events instead.');
     try {
       const response = await fetch(`${API_BASE_URL}/api/decks/generate`, {
         method: 'POST',

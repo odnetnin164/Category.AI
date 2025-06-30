@@ -70,7 +70,7 @@ Here is an example:
       throw new Error('No content received from OpenAI');
     }
 
-    // Parse the JSON response, handling markdown code blocks
+    // Parse the JSON response, handling markdown code blocks and JS object notation
     let deckData;
     try {
       // Remove markdown code blocks if present
@@ -81,7 +81,30 @@ Here is an example:
         cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
       
-      deckData = JSON.parse(cleanContent);
+      // Try parsing as-is first
+      try {
+        deckData = JSON.parse(cleanContent);
+      } catch (firstParseError) {
+        // If it fails, try to fix JavaScript object notation to valid JSON
+        console.log('First JSON parse failed, attempting to fix JS object notation...');
+        
+        // Fix unquoted property names (common AI response issue)
+        let fixedContent = cleanContent
+          // Add quotes around unquoted property names
+          .replace(/(\w+):\s*"/g, '"$1": "')
+          .replace(/(\w+):\s*\[/g, '"$1": [')
+          .replace(/(\w+):\s*\{/g, '"$1": {')
+          .replace(/(\w+):\s*(\d+)/g, '"$1": $2')
+          .replace(/(\w+):\s*(true|false|null)/g, '"$1": $2');
+        
+        try {
+          deckData = JSON.parse(fixedContent);
+        } catch (secondParseError) {
+          console.error('OpenAI response content:', content);
+          console.error('Fixed content attempt:', fixedContent);
+          throw new Error(`Invalid JSON response from OpenAI after fix attempt: ${secondParseError}`);
+        }
+      }
     } catch (parseError) {
       console.error('OpenAI response content:', content);
       throw new Error(`Invalid JSON response from OpenAI: ${parseError}`);
