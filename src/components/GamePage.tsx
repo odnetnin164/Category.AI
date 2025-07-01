@@ -140,10 +140,11 @@ const GamePage: React.FC = () => {
       setOrientationData({ alpha, beta, gamma });
       
       // Only trigger actions if not in cooldown
+      // Gamma ranges from -90 to +90. When horizontal, we're near the extremes
       if (!cooldownRef.current) {
-        if (beta > 45) {
+        if (gamma < 50 && gamma > 0) {
           handleCardAction('correct');
-        } else if (beta < -20) {
+        } else if (gamma > -50 && gamma < 0) {
           handleCardAction('pass');
         }
       }
