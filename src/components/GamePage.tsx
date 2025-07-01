@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { Card, GameResult, Deck } from '../types';
@@ -19,6 +19,8 @@ const GamePage: React.FC = () => {
   const [countdownValue, setCountdownValue] = useState(3);
   const [actionFeedback, setActionFeedback] = useState<'CORRECT' | 'PASS' | null>(null);
   const [isActionCooldown, setIsActionCooldown] = useState(false);
+  const [orientationData, setOrientationData] = useState<{alpha: number, beta: number, gamma: number}>({alpha: 0, beta: 0, gamma: 0});
+  const cooldownRef = useRef(false);
 
   useEffect(() => {
     const fetchDeck = async () => {
@@ -93,7 +95,7 @@ const GamePage: React.FC = () => {
   }, [currentCardIndex, shuffledCards.length, gameState, gameResults, deck, deckId, timeLeft, navigate]);
 
   const handleCardAction = useCallback((action: 'correct' | 'pass') => {
-    if (gameState !== 'playing' || currentCardIndex >= shuffledCards.length || isActionCooldown) return;
+    if (gameState !== 'playing' || currentCardIndex >= shuffledCards.length || cooldownRef.current) return;
 
     const currentCard = shuffledCards[currentCardIndex];
     const result: GameResult = {
@@ -104,13 +106,15 @@ const GamePage: React.FC = () => {
     setGameResults(prev => [...prev, result]);
     setActionFeedback(action === 'correct' ? 'CORRECT' : 'PASS');
     setIsActionCooldown(true);
+    cooldownRef.current = true;
 
     setTimeout(() => {
       setActionFeedback(null);
       setCurrentCardIndex(prev => prev + 1);
       setIsActionCooldown(false);
+      cooldownRef.current = false;
     }, 800);
-  }, [gameState, currentCardIndex, shuffledCards, isActionCooldown]);
+  }, [gameState, currentCardIndex, shuffledCards]);
 
   const handleSkipToEnd = useCallback(() => {
     if (gameState !== 'playing') return;
@@ -129,12 +133,19 @@ const GamePage: React.FC = () => {
     if (gameState !== 'playing') return;
 
     const handleDeviceOrientation = (event: any) => {
+      const alpha = event.alpha || 0;
       const beta = event.beta || 0;
+      const gamma = event.gamma || 0;
       
-      if (beta > 45) {
-        handleCardAction('correct');
-      } else if (beta < -20) {
-        handleCardAction('pass');
+      setOrientationData({ alpha, beta, gamma });
+      
+      // Only trigger actions if not in cooldown
+      if (!cooldownRef.current) {
+        if (beta > 45) {
+          handleCardAction('correct');
+        } else if (beta < -20) {
+          handleCardAction('pass');
+        }
       }
     };
 
@@ -252,6 +263,22 @@ const GamePage: React.FC = () => {
       <div className="debug-controls">
         <button onClick={() => handleCardAction('correct')}>✓ Correct</button>
         <button onClick={() => handleCardAction('pass')}>✗ Pass</button>
+      </div>
+
+      <div className="debug-menu">
+        <div className="debug-title">Sensors</div>
+        <div className="debug-item">
+          <span className="debug-label">Alpha:</span>
+          <span className="debug-value">{orientationData.alpha.toFixed(1)}°</span>
+        </div>
+        <div className="debug-item">
+          <span className="debug-label">Beta:</span>
+          <span className="debug-value">{orientationData.beta.toFixed(1)}°</span>
+        </div>
+        <div className="debug-item">
+          <span className="debug-label">Gamma:</span>
+          <span className="debug-value">{orientationData.gamma.toFixed(1)}°</span>
+        </div>
       </div>
     </div>
   );

@@ -252,6 +252,55 @@
   margin-bottom: 20px;
 }
 
+.debug-menu {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 15px 20px;
+  color: white;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  min-width: 140px;
+  z-index: 999;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.debug-title {
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+  color: #4CAF50;
+  font-size: 1rem;
+}
+
+.debug-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.debug-item:last-child {
+  margin-bottom: 0;
+}
+
+.debug-label {
+  color: #ccc;
+  font-weight: normal;
+}
+
+.debug-value {
+  color: #fff;
+  font-weight: bold;
+  text-align: right;
+  min-width: 50px;
+}
+
 @media (max-width: 480px) {
   .current-card {
     font-size: clamp(1.5rem, 8vw, 2rem);
@@ -277,5 +326,16 @@
   
   .debug-controls button {
     max-width: none;
+  }
+  
+  .debug-menu {
+    right: 10px;
+    min-width: 120px;
+    padding: 12px 15px;
+    font-size: 0.8rem;
+  }
+  
+  .debug-title {
+    font-size: 0.9rem;
   }
 }
