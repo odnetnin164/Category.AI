@@ -21,8 +21,18 @@ const GamePage: React.FC = () => {
   const [isActionCooldown, setIsActionCooldown] = useState(false);
   const [orientationData, setOrientationData] = useState<{alpha: number, beta: number, gamma: number}>({alpha: 0, beta: 0, gamma: 0});
   const cooldownRef = useRef(false);
+  const correctSoundRef = useRef<HTMLAudioElement | null>(null);
+  const passSoundRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    // Initialize audio files
+    correctSoundRef.current = new Audio('/correct.mp3');
+    passSoundRef.current = new Audio('/pass.mp3');
+    
+    // Preload audio files
+    correctSoundRef.current.preload = 'auto';
+    passSoundRef.current.preload = 'auto';
+
     const fetchDeck = async () => {
       if (!deckId) {
         navigate('/');
@@ -102,6 +112,30 @@ const GamePage: React.FC = () => {
       card: currentCard,
       result: action
     };
+
+    // Play sound effect
+    try {
+      if (action === 'correct' && correctSoundRef.current) {
+        correctSoundRef.current.currentTime = 0;
+        correctSoundRef.current.play().catch(e => console.log('Sound play failed:', e));
+      } else if (action === 'pass' && passSoundRef.current) {
+        passSoundRef.current.currentTime = 0;
+        passSoundRef.current.play().catch(e => console.log('Sound play failed:', e));
+      }
+    } catch (e) {
+      console.log('Sound error:', e);
+    }
+
+    // Trigger vibration
+    if ('vibrate' in navigator) {
+      if (action === 'correct') {
+        // Short, positive vibration pattern for correct
+        navigator.vibrate([100, 50, 100]);
+      } else {
+        // Single longer vibration for pass
+        navigator.vibrate([200]);
+      }
+    }
 
     setGameResults(prev => [...prev, result]);
     setActionFeedback(action === 'correct' ? 'CORRECT' : 'PASS');
