@@ -153,50 +153,55 @@ const GamePage: React.FC = () => {
   }, [currentCardIndex, shuffledCards.length, gameState, gameResults, deck, deckId, timeLeft, navigate]);
 
   const handleCardAction = useCallback((action: 'correct' | 'pass') => {
-    if (gameState !== 'playing' || currentCardIndex >= shuffledCards.length || cooldownRef.current) return;
+    if (gameState !== 'playing' || cooldownRef.current) return;
 
-    const currentCard = shuffledCards[currentCardIndex];
-    const result: GameResult = {
-      card: currentCard,
-      result: action
-    };
+    setCurrentCardIndex(prevIndex => {
+      if (prevIndex >= shuffledCards.length) return prevIndex;
+      
+      const currentCard = shuffledCards[prevIndex];
+      const result: GameResult = {
+        card: { ...currentCard },
+        result: action
+      };
 
-    // Play sound effect
-    try {
-      if (action === 'correct' && correctSoundRef.current) {
-        correctSoundRef.current.currentTime = 0;
-        correctSoundRef.current.play().catch(e => console.log('Sound play failed:', e));
-      } else if (action === 'pass' && passSoundRef.current) {
-        passSoundRef.current.currentTime = 0;
-        passSoundRef.current.play().catch(e => console.log('Sound play failed:', e));
+      // Play sound effect
+      try {
+        if (action === 'correct' && correctSoundRef.current) {
+          correctSoundRef.current.currentTime = 0;
+          correctSoundRef.current.play().catch(e => console.log('Sound play failed:', e));
+        } else if (action === 'pass' && passSoundRef.current) {
+          passSoundRef.current.currentTime = 0;
+          passSoundRef.current.play().catch(e => console.log('Sound play failed:', e));
+        }
+      } catch (e) {
+        console.log('Sound error:', e);
       }
-    } catch (e) {
-      console.log('Sound error:', e);
-    }
 
-    // Trigger vibration
-    if ('vibrate' in navigator) {
-      if (action === 'correct') {
-        // Short, positive vibration pattern for correct
-        navigator.vibrate([100, 50, 100]);
-      } else {
-        // Single longer vibration for pass
-        navigator.vibrate([200]);
+      // Trigger vibration
+      if ('vibrate' in navigator) {
+        if (action === 'correct') {
+          // Short, positive vibration pattern for correct
+          navigator.vibrate([100, 50, 100]);
+        } else {
+          // Single longer vibration for pass
+          navigator.vibrate([200]);
+        }
       }
-    }
 
-    setGameResults(prev => [...prev, result]);
-    setActionFeedback(action === 'correct' ? 'CORRECT' : 'PASS');
-    setIsActionCooldown(true);
-    cooldownRef.current = true;
+      setGameResults(prev => [...prev, result]);
+      setActionFeedback(action === 'correct' ? 'CORRECT' : 'PASS');
+      setIsActionCooldown(true);
+      cooldownRef.current = true;
 
-    setTimeout(() => {
-      setActionFeedback(null);
-      setCurrentCardIndex(prev => prev + 1);
-      setIsActionCooldown(false);
-      cooldownRef.current = false;
-    }, 800);
-  }, [gameState, currentCardIndex, shuffledCards]);
+      setTimeout(() => {
+        setActionFeedback(null);
+        setIsActionCooldown(false);
+        cooldownRef.current = false;
+      }, 800);
+
+      return prevIndex + 1;
+    });
+  }, [gameState, shuffledCards]);
 
   const handleSkipToEnd = useCallback(() => {
     if (gameState !== 'playing') return;
