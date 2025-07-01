@@ -126,11 +126,14 @@ This is a React TypeScript guessing game (Category.AI) with AI-powered deck gene
   - Visual progress bars and status messages
   - Form validation and error handling
 
-- **GamePage.tsx**: Core game logic with device orientation detection
-  - Uses `DeviceOrientationEvent` to detect phone tilting (beta > 45° = correct, beta < -20° = pass)
+- **GamePage.tsx**: Core game logic with device orientation detection and immersive mobile features
+  - Uses `DeviceOrientationEvent` to detect phone tilting (gamma < 50° & > 0° = correct, gamma > -50° & < 0° = pass)
   - 60-second countdown timer with automatic navigation to score page
   - Card shuffling and state management for current game session
-  - Falls back to keyboard controls (Arrow Down/Up) for testing
+  - **Audio Feedback**: Plays distinct sounds for correct/pass actions via preloaded MP3 files
+  - **Haptic Feedback**: Different vibration patterns (double pulse for correct, single pulse for pass)
+  - **Fullscreen Mode**: Automatically enters fullscreen during gameplay for immersive experience
+  - Falls back to keyboard controls (Arrow Down/Up) for development/testing
 
 - **ScorePage.tsx**: Results display with navigation options
   - Receives game results via React Router `location.state`
@@ -164,12 +167,16 @@ This is a React TypeScript guessing game (Category.AI) with AI-powered deck gene
 - **Error Handling**: Robust JSON parsing with fallback for JavaScript object notation
 - **Validation**: Ensures deck structure matches expected schema
 
-### Mobile-First Design
+### Mobile-First Design & Immersive Features
 
 - CSS optimized for horizontal phone orientation
 - Device orientation API integration for tilt controls  
 - Landscape mode styling in `App.css` with overflow hidden
 - Visual feedback system for user actions during gameplay
+- **Fullscreen API**: Automatic fullscreen mode during gameplay with cross-browser support
+- **Audio System**: Preloaded MP3 files (`/public/correct.mp3`, `/public/pass.mp3`) for immediate playback
+- **Vibration API**: Haptic feedback with distinct patterns for different actions
+- **Mobile Web App**: Meta tags for app-like behavior when added to home screen
 
 ### State Management Philosophy
 
@@ -256,8 +263,9 @@ Docker Architecture:
 
 ### Device Orientation Integration
 - Uses `DeviceOrientationEvent` API for tilt detection
-- Beta > 45° = Correct answer, Beta < -20° = Pass/Skip
-- Requires HTTPS in production for security reasons
+- **Current Implementation**: gamma < 50° & > 0° = Correct, gamma > -50° & < 0° = Pass
+- Requires HTTPS in production for security reasons and iOS permission requests
+- Includes orientation permission handling for iOS devices
 - Fallback keyboard controls (Arrow Up/Down) for development/testing
 
 ### Docker & Networking
@@ -266,11 +274,15 @@ Docker Architecture:
 - **SSL Termination**: Nginx handles HTTPS with WebSocket upgrade support
 - **Environment Configuration**: `.env` file for secrets and configuration
 
-### Game Mechanics
+### Game Mechanics & User Experience
 - **Timer System**: 60-second countdown with automatic navigation to results
 - **Card Shuffling**: Uses `Math.random() - 0.5` array sorting
 - **Visual Feedback**: 800ms animation delays between card actions
+- **Audio Feedback**: Immediate sound effects for user actions with error handling
+- **Haptic Feedback**: Vibration patterns: `[100, 50, 100]` for correct, `[200]` for pass
+- **Cooldown System**: Prevents rapid-fire actions with 800ms cooldown period
 - **State Flow**: Game results passed via React Router `location.state`
+- **Immersive Mode**: Fullscreen automatically engages/disengages with gameplay state
 
 ### CSS Architecture
 - **Global Styles**: App.css and index.css for base styling
@@ -282,3 +294,16 @@ Docker Architecture:
 - Minimal test coverage (default CRA setup)
 - Uses React Testing Library for component testing
 - Significant opportunity for test expansion
+
+### Mobile Web App Features
+- **Progressive Web App**: Configured with manifest.json for installability
+- **Viewport Optimization**: `user-scalable=no, viewport-fit=cover` for immersive mobile experience
+- **Apple Web App**: Meta tags for iOS home screen installation (`apple-mobile-web-app-capable`)
+- **Status Bar**: Translucent status bar for seamless mobile experience
+- **HTTPS Required**: Device APIs (orientation, fullscreen, vibration) require secure context
+
+### Audio & Media Assets
+- **Sound Files**: Located in `/public/` directory for direct browser access
+- **Preloading Strategy**: Audio files preloaded on component mount for immediate playback
+- **Error Handling**: Graceful degradation when audio playback fails
+- **Cross-browser Support**: Audio API compatibility across mobile browsers

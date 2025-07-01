@@ -60,6 +60,54 @@ const GamePage: React.FC = () => {
     fetchDeck();
   }, [deckId, navigate]);
 
+  // Fullscreen functionality
+  useEffect(() => {
+    const enterFullscreen = async () => {
+      if (gameState === 'playing') {
+        try {
+          if (document.documentElement.requestFullscreen) {
+            await document.documentElement.requestFullscreen();
+          } else if ((document.documentElement as any).webkitRequestFullscreen) {
+            await (document.documentElement as any).webkitRequestFullscreen();
+          } else if ((document.documentElement as any).msRequestFullscreen) {
+            await (document.documentElement as any).msRequestFullscreen();
+          }
+        } catch (err) {
+          console.log('Fullscreen not supported or denied:', err);
+        }
+      }
+    };
+
+    const exitFullscreen = async () => {
+      if (gameState !== 'playing') {
+        try {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen();
+          } else if ((document as any).webkitExitFullscreen) {
+            await (document as any).webkitExitFullscreen();
+          } else if ((document as any).msExitFullscreen) {
+            await (document as any).msExitFullscreen();
+          }
+        } catch (err) {
+          console.log('Exit fullscreen failed:', err);
+        }
+      }
+    };
+
+    if (gameState === 'playing') {
+      enterFullscreen();
+    } else {
+      exitFullscreen();
+    }
+
+    // Cleanup on component unmount
+    return () => {
+      if (gameState === 'playing') {
+        exitFullscreen();
+      }
+    };
+  }, [gameState]);
+
   useEffect(() => {
     if (gameState === 'countdown') {
       const timer = setTimeout(() => {
