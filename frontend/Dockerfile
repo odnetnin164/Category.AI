@@ -14,6 +14,13 @@ COPY public/ ./public/
 COPY src/ ./src/
 COPY tsconfig.json ./
 
+# Accept build arguments for React environment variables
+ARG REACT_APP_API_BASE_URL
+ARG SERVER_HOST
+
+# Set environment variables for build
+ENV REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
+
 # Build the React application
 RUN npm run build
 
